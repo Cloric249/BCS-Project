@@ -1,0 +1,63 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision.models as models
+
+device = torch.device('cuda:0')
+
+# This is currently expermimentation with different models as a test of their performance
+# This class defines the Encoder for the video captioning model
+class EncoderCNN(nn.Module):
+    def __init__(self, embed_size):
+        super(EncoderCNN, self).__init__()
+        resNet = models.resnet50(pretrained=True, progress=True)
+        # number of input features for resNet model
+        num_in_features = print("Input Features: ", resNet.fc.in_features)
+        # number of output features for resNet model
+        num_out_features = print("Output Features: ", resNet.fc.out_features)
+        relu = nn.ReLU()
+        # uses the GPU instead of the CPU for computing features
+        resNet = resNet.to(device)
+        Loss = nn.CrossEntropyLoss()
+        # remove fully connected layer
+        for param in resNet.parameters():
+            param.requires_grad_(False)
+
+        modules = list(resNet.children())[:-1]
+        self.resNet = (nn.Sequential(*modules))
+        self.embed = nn.Linear(resNet.fc.in_features, embed_size)
+        self.batch = nn.BatchNorm1d(embed_size, momentum= 0.1)
+        self.embed.weight.data.normal_(0, 0.02)
+        self.embed.bias.data.fill_(0)
+
+    # forward propogation of features
+    def forward(self, frames):
+        features = self.resNet(frames)
+        features = features.view(features.size(0), -1)
+        features = self.batch(self.embed(features))
+        return features
+
+
+
+# This class defines the RNN for the video captioning model
+class DecoderRNN(nn.module):
+    def __init__(self, embed_size, hidden_size, vocab, num_of_layers=1):
+        super(DecoderRNN, self).__init__()
+        # Defines the number of layers
+        self.num_of_layers = num_of_layers
+        self.lstm = nn.LSTM(input_size=embed_size, hidden_size=hidden_size, num_layers=num_of_layers, batch_first=True)
+        self.linear = nn.Linear(hidden_size, vocab)
+
+    def forward(self, features, captions):
+        captions = captions[:, :-1]
+        embed = self.embedding_layer(captions)
+        embed = torch.cat((features.unsqueeze(1), embed), dim=1)
+        lstm_outputs = self.lstm(embed)
+        out = self.linear(lstm_outputs)
+
+        return out
+
+
+
+
+if __name__ == '__main__':
