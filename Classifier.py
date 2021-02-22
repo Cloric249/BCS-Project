@@ -10,6 +10,7 @@ import os.path
 from Katna.video import Video
 from tqdm import tqdm
 import pathlib
+from PIL import Image
 
 
 # read the video and return the frames
@@ -96,15 +97,32 @@ def extractKeyFrames():
             print("An error occured")
 
 def getFrames(id, num_of_frames):
-    for frames in tqdm(os.listdir("D:/Downloads/TKeyFrames/" + id)):
+    frames = []
+    flag = None
+    for frame in tqdm(os.listdir("D:/Downloads/TKeyFrames/" + id)):
         try:
-            frames = []
-            for file
+            # Convert to 3 - channel
+            img = (Image.open(frame)).convert('RGB')
+            frames.append(img)
         except:
             print("An error occured")
+    removing = len(frames) > num_of_frames
+    while removing != 0:
+        if flag == False:
+            # remove the image at the quarter position
+            img_index = len((frames//2)//2)
+            frames.pop(img_index)
+            flag = True
+        else:
+            img_index = len((frames//2)//2)
+            frames.pop(img_index)
+            flag = False
+
+    return frames
+
 
 
 if __name__ == '__main__':
     #framesToVid()
-    extractKeyFrames()
-
+    #extractKeyFrames()
+    print("OK")
