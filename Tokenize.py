@@ -1,7 +1,7 @@
 import json
 
 class Vocab():
-    def __init__(self, start_tkn="<Start>", end_tkn="<End>",
+    def __init__(self, start_tkn="<SOS>", end_tkn="<EOS>",
                  vocab_file="Filtered Words.txt"):
 
         self.start_tkn = start_tkn
@@ -29,12 +29,16 @@ class Vocab():
             tokenized_dict[key] = id
             id = id + 1
         # dump the dictionary to a json file for later use
-        with open("word_to_id", "w") as file:
-            json.dumps(tokenized_dict ,file)
+        with open("word_to_id.json", "w") as file:
+            json.dump(tokenized_dict ,file)
 
     # method returns the previously created vocab file
     def get_vocab(self):
-        with open("word_to_id", "r") as file:
+        with open("word_to_id.json", "r") as file:
             vocab = json.load(file)
 
         return vocab
+
+if __name__ == '__main__':
+    x = Vocab()
+    x.create_vocab()

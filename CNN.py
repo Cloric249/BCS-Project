@@ -40,17 +40,17 @@ class EncoderCNN(nn.Module):
 
 
 # This class defines the RNN for the video captioning model
-class DecoderRNN(nn.module):
-    def __init__(self, embed_size, hidden_size, vocab, num_of_layers=1):
-        super(DecoderRNN, self).__init__()
+class DecoderRNN(nn.Module):
+    def __init__(self, embed_size, hidden_size, vocab_size, num_of_layers=1):
+        super().__init__()
         # Defines the number of layers
-        self.num_of_layers = num_of_layers
+        self.num_of_layers = nn.Embedding(vocab_size, embed_size)
         self.lstm = nn.LSTM(input_size=embed_size, hidden_size=hidden_size, num_layers=num_of_layers, batch_first=True)
-        self.linear = nn.Linear(hidden_size, vocab)
+        self.linear = nn.Linear(hidden_size, vocab_size)
 
     def forward(self, features, captions):
         captions = captions[:, :-1]
-        embed = self.embedding_layer(captions)
+        embed = self.num_of_layers(captions)
         embed = torch.cat((features.unsqueeze(1), embed), dim=1)
         lstm_outputs = self.lstm(embed)
         out = self.linear(lstm_outputs)
@@ -60,4 +60,3 @@ class DecoderRNN(nn.module):
 
 
 
-if __name__ == '__main__':
